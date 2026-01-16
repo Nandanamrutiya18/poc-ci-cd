@@ -11,7 +11,11 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'pip install -r requirements.txt'
+                sh '''
+                python --version
+                pip install --upgrade pip
+                pip install -r requirements.txt
+                '''
             }
         }
 
@@ -23,15 +27,15 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t poc-python-app .'
+                sh 'docker build -t poc-python-app:latest .'
             }
         }
 
         stage('Deploy on Server (CD)') {
             steps {
                 sh '''
-                docker rm -f poc-python || true
-                docker run -d --name poc-python poc-python-app
+                docker rm -f poc-python-app || true
+                docker run -d -p 5000:5000 --name poc-python-app poc-python-app:latest
                 '''
             }
         }
@@ -39,7 +43,10 @@ pipeline {
 
     post {
         success {
-            echo 'CI/CD Pipeline Completed Successfully'
+            echo '✅ CI/CD Pipeline Completed Successfully'
+        }
+        failure {
+            echo '❌ Pipeline Failed'
         }
     }
 }
