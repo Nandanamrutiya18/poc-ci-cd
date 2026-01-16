@@ -1,15 +1,21 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "poc-python-app"
+        CONTAINER_NAME = "poc-python-app"
+        PORT = "5000"
+    }
+
     stages {
 
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Verify Python & Install Dependencies (CI)') {
             steps {
                 sh '''
                 python --version
@@ -25,17 +31,20 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Docker Image (CI)') {
             steps {
-                sh 'docker build -t poc-python-app:latest .'
+                sh '''
+                docker build -t $IMAGE_NAME:latest .
+                '''
             }
         }
 
         stage('Deploy on Server (CD)') {
             steps {
                 sh '''
-                docker rm -f poc-python-app || true
-                docker run -d -p 5000:5000 --name poc-python-app poc-python-app:latest
+                docker stop $CONTAINER_NAME || true
+                docker rm $CONTAINER_NAME || true
+                docker run -d -p $PORT:5000 --name $CONTAINER_NAME $IMAGE_NAME:latest
                 '''
             }
         }
@@ -46,7 +55,10 @@ pipeline {
             echo '✅ CI/CD Pipeline Completed Successfully'
         }
         failure {
-            echo '❌ Pipeline Failed'
+            echo '❌ CI/CD Pipeline Failed'
+        }
+        always {
+            echo '🔁 Pipeline Execution Finished'
         }
     }
 }
