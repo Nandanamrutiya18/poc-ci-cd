@@ -15,15 +15,15 @@ pipeline {
             }
         }
 
-        stage('Verify Python & Install Dependencies (CI)') {
-            steps {
-                sh '''
-                python --version
-                pip install --upgrade pip
-                pip install -r requirements.txt
-                '''
-            }
+       stage('Verify Python & Install Dependencies (CI)') {
+    steps {
+        bat '''
+        python --version
+        python -m pip install --upgrade pip
+        python -m pip install -r requirements.txt
+        '''
         }
+    }
 
         stage('Run Unit Tests (CI)') {
             steps {
